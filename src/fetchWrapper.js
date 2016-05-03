@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define, no-else-return, prefer-const */
 
-import 'whatwg-fetch';
+import fetchWithRetries from 'fbjs/lib/fetchWithRetries';
 
 export default function fetchWrapper(reqFromRelay, middlewares) {
   const fetchAfterAllWrappers = (req) => {
@@ -14,7 +14,7 @@ export default function fetchWrapper(reqFromRelay, middlewares) {
       }
     }
 
-    return fetch(url, opts).then();
+    return fetchWithRetries(url, { ...opts });
   };
 
   const wrappedFetch = compose(...middlewares)(fetchAfterAllWrappers);
