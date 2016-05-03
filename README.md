@@ -16,8 +16,8 @@ Available middlewares:
 - **retry** - for request retry if the initial request fails
 
   `options`:
-  * `fetchTimeout` : Number in milliseconds that defines in how much time will request timeout after is been sent to the server.
-  * `retryDelays` : Array of millisecond that defines the values on which are retries based on.
+  * `fetchTimeout` : Number in milliseconds that defines in how much time will request timeout after it has been sent to the server.
+  * `retryDelays` : Array of millisecond that defines the values on which retries are based on.
   * `statusCodes` : Array of XMLHttpRequest status codes which will fire up retryMiddleware.
 
   If `options` are not provided retryMiddleware will use default options:
