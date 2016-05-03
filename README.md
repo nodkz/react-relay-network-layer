@@ -14,7 +14,7 @@ Available middlewares:
 - **logger** - for logging requests and responses
 - **perf** - simple time measure for network request
 - **retry** - for request retry if the initial request fails
-  - `options`:
+  `options`:
   * `fetchTimeout` : Number in milliseconds that defines in how much time will request timeout after is been sent to the server.
   * `retryDelays` : Array of millisecond that defines the values on which are retries based on.
   * `statusCodes` : Array of XMLHttpRequest status codes which will fire up retryMiddleware.
