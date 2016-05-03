@@ -14,6 +14,7 @@ Available middlewares:
 - **logger** - for logging requests and responses
 - **perf** - simple time measure for network request
 - **retry** - for request retry if the initial request fails
+
   `options`:
   * `fetchTimeout` : Number in milliseconds that defines in how much time will request timeout after is been sent to the server.
   * `retryDelays` : Array of millisecond that defines the values on which are retries based on.
@@ -83,7 +84,7 @@ Part 2: Middlewares
 ```js
 import Relay from 'react-relay';
 import {
-  RelayNetworkLayer, urlMiddleware, authMiddleware, loggerMiddleware, perfMiddleware,
+  RelayNetworkLayer, retryMiddleware, urlMiddleware, authMiddleware, loggerMiddleware, perfMiddleware,
 } from 'react-relay-network-layer';
 
 Relay.injectNetworkLayer(new RelayNetworkLayer([
@@ -106,6 +107,11 @@ Relay.injectNetworkLayer(new RelayNetworkLayer([
         .catch(err => console.log('[client.js] ERROR can not refresh token', err));
     },
   }),
+  retryMiddleware({
+    fetchTimeout: 15000,
+    retryDelays: [1000, 3000],
+    statusCodes: [404, 503, 504]
+  })
 ], { disableBatchQuery: true }));
 ```
 
