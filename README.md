@@ -20,6 +20,11 @@ Available middlewares:
   * `retryDelays` : Array of millisecond that defines the values on which are retries based on.
   * `statusCodes` : Array of XMLHttpRequest status codes which will fire up retryMiddleware.
 
+  If `options` are not provided retryMiddleware will use default options:
+    * `fetchTimeout`: 15000
+    * `retryDelays`: [1000, 3000]
+    * `statusCodes`:  status < 200 or status > 300
+
 
 Installation
 ============
