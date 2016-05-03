@@ -13,6 +13,11 @@ Available middlewares:
 - **url** - for manipulating fetch `url` on fly via thunk
 - **logger** - for logging requests and responses
 - **perf** - simple time measure for network request
+- **retry** - for request retry if the initial request fails
+  - `options`:
+  * `fetchTimeout` : Number in milliseconds that defines in how much time will request timeout after is been sent to the server.
+  * `retryDelays` : Array of millisecond that defines the values on which are retries based on.
+  * `statusCodes` : Array of XMLHttpRequest status codes which will fire up retryMiddleware.
 
 
 Installation
@@ -147,8 +152,8 @@ Middlewares use LIFO (last in, first out) stack. Or simply put - use `compose` f
 
 TODO
 ====
-- write fetchWithRetries middleware
-- improve performance of `graphqlBatchHTTPWrapper`, by removing JSON.parse (need find proper way how to get result from `express-graphql` in json, not stringified)    
-- find maintainers
+- [x] write fetchWithRetries middleware
+- [ ] improve performance of `graphqlBatchHTTPWrapper`, by removing JSON.parse (need find proper way how to get result from `express-graphql` in json, not stringified)
+- [ ] find maintainers
  - who made fixes and remove missunderstanding in readme.MD 
  - write tests
