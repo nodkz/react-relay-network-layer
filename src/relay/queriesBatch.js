@@ -14,8 +14,8 @@ export default function queriesBatch(relayRequestList, fetchWithMiddleware) {
     method: 'POST',
     headers: {
       Accept: '*/*',
-      'Content-Type': 'application/json'
-    }
+      'Content-Type': 'application/json',
+    },
   };
 
   req.body = JSON.stringify(
@@ -37,5 +37,9 @@ export default function queriesBatch(relayRequestList, fetchWithMiddleware) {
           );
         }
       });
+    }).catch(e => {
+      return Promise.all(relayRequestList.map(relayRequest => {
+        return relayRequest.reject(e);
+      }));
     });
 }
