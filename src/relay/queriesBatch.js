@@ -22,7 +22,7 @@ export default function queriesBatch(relayRequestList, fetchWithMiddleware) {
     Object.keys(requestMap).map((id) => ({
       id,
       query: requestMap[id].getQueryString(),
-      variables: requestMap[id].getVariables()
+      variables: requestMap[id].getVariables(),
     }))
   );
 
