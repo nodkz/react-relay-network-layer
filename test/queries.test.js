@@ -48,4 +48,34 @@ describe('Queries tests', () => {
 
     return rnl.sendQueries([req1]);
   });
+
+  it('should handle server non-2xx errors', () => {
+    fetchMock.mock({
+      matcher: '/graphql',
+
+      response: {
+        status: 500,
+        body: {
+          errors: [{
+            message: 'Something went completely wrong.',
+          }],
+        },
+      },
+      method: 'POST',
+    });
+
+    const req1 = mockReq(1);
+    req1.reject = (err) => {
+      assert(err instanceof Error, 'should be an error');
+      assert.equal(err.message, [
+        'Server request for query `debugname1` failed for the following reasons:',
+        '',
+        'Server response had an error status: 500',
+      ].join('\n'));
+      assert.equal(err.status, 500);
+      assert.equal(err.source, '{"errors":[{"message":"Something went completely wrong."}]}');
+    };
+
+    return rnl.sendQueries([req1]);
+  });
 });

@@ -1,9 +1,14 @@
 /* eslint-disable prefer-template */
 
+/*
+ * Adapted from
+ * https://github.com/facebook/relay/blob/8223d37b802b3890c8a387c47cba382d634f5c21/src/network-layer/default/RelayDefaultNetworkLayer.js#L199
+ */
+
 /**
  * Formats an error response from GraphQL server request.
  */
-export default function formatRequestErrors(request, errors) {
+function formatRequestErrors(request, errors) {
   const CONTEXT_BEFORE = 20;
   const CONTEXT_LENGTH = 60;
 
@@ -25,4 +30,17 @@ export default function formatRequestErrors(request, errors) {
       '';
     return prefix + message + locationMessage;
   }).join('\n');
+}
+
+export default function createRequestError(request, requestType, responseStatus, payload) {
+  const errorReason = typeof payload === 'object' ?
+    formatRequestErrors(request, payload.errors) :
+    `Server response had an error status: ${responseStatus}`;
+  const error = new Error(
+    `Server request for ${requestType} \`${request.getDebugName()}\` ` +
+    `failed for the following reasons:\n\n${errorReason}`
+  );
+  error.source = payload;
+  error.status = responseStatus;
+  return error;
 }

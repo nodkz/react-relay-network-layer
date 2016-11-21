@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign, prefer-template */
 
-import formatRequestErrors from '../formatRequestErrors';
+import createRequestError from '../createRequestError';
 
 export function queryPre(relayRequest) {
   const req = {
@@ -26,12 +26,7 @@ export function queryPre(relayRequest) {
 export function queryPost(relayRequest, fetchPromise) {
   return fetchPromise.then(payload => {
     if (payload.hasOwnProperty('errors')) {
-      const error = new Error(
-        'Server request for query `' + relayRequest.getDebugName() + '` ' +
-        'failed for the following reasons:\n\n' +
-        formatRequestErrors(relayRequest, payload.errors)
-      );
-      error.source = payload;
+      const error = createRequestError(relayRequest, 'query', '200', payload);
       relayRequest.reject(error);
     } else if (!payload.hasOwnProperty('data')) {
       relayRequest.reject(new Error(

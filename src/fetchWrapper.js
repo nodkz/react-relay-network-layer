@@ -1,6 +1,8 @@
 /* eslint-disable no-use-before-define, no-else-return, prefer-const, no-param-reassign */
 
-export default function fetchWrapper(reqFromRelay, middlewares) {
+import createRequestError from './createRequestError';
+
+export default function fetchWrapper(request, middlewares) {
   const fetchAfterAllWrappers = (req) => {
     let { url, ...opts } = req;
 
@@ -13,6 +15,7 @@ export default function fetchWrapper(reqFromRelay, middlewares) {
     }
 
     return fetch(url, opts)
+      .then(response => throwOnServerError(request, response))
       .then(res =>
         // sub-promise for combining `res` with parsed json
         res.json()
@@ -30,8 +33,7 @@ export default function fetchWrapper(reqFromRelay, middlewares) {
 
   const wrappedFetch = compose(...middlewares)(fetchAfterAllWrappers);
 
-  return wrappedFetch(reqFromRelay)
-    .then(throwOnServerError)
+  return wrappedFetch(request)
     .then(res => res.json);
 }
 
@@ -56,10 +58,12 @@ function compose(...funcs) {
   }
 }
 
-function throwOnServerError(response) {
+function throwOnServerError(request, response) {
   if (response.status >= 200 && response.status < 300) {
     return response;
+  } else {
+    return response.text().then(payload => {
+      throw createRequestError(request.relayReqObj, request.relayReqType, response.status, payload);
+    });
   }
-
-  throw response;
 }
