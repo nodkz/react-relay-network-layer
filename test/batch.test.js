@@ -58,4 +58,34 @@ describe('Batch tests', () => {
     const req2 = mockReq(2);
     assert.isFulfilled(rnl.sendQueries([req1, req2]));
   });
+
+  it('should handle server non-2xx errors', () => {
+    fetchMock.mock({
+      matcher: '/graphql/batch',
+
+      response: {
+        status: 500,
+        body: {
+          errors: [{
+            message: 'Something went completely wrong.',
+          }],
+        },
+      },
+      method: 'POST',
+    });
+
+    const req1 = mockReq(1);
+    const req2 = mockReq(2);
+
+    return assert.isRejected(rnl.sendQueries([req1, req2])).then(err => {
+      assert(err instanceof Error, 'should be an error');
+      assert.equal(err.message, [
+        'Server request for batch-query `debugname1 debugname2` failed for the following reasons:',
+        '',
+        'Server response had an error status: 500',
+      ].join('\n'));
+      assert.equal(err.status, 500);
+      assert.equal(err.source, '{"errors":[{"message":"Something went completely wrong."}]}');
+    });
+  });
 });

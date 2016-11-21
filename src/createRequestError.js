@@ -33,11 +33,13 @@ function formatRequestErrors(request, errors) {
 }
 
 export default function createRequestError(request, requestType, responseStatus, payload) {
+  const debugName = Array.isArray(request) ?
+    request.map(req => req.getDebugName()).join(' ') : request.getDebugName();
   const errorReason = typeof payload === 'object' ?
     formatRequestErrors(request, payload.errors) :
     `Server response had an error status: ${responseStatus}`;
   const error = new Error(
-    `Server request for ${requestType} \`${request.getDebugName()}\` ` +
+    `Server request for ${requestType} \`${debugName}\` ` +
     `failed for the following reasons:\n\n${errorReason}`
   );
   error.source = payload;
