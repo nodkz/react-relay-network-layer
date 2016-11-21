@@ -44,6 +44,7 @@ describe('Mutation tests', () => {
     const req1 = mockReq(1);
     req1.reject = (err) => {
       assert(err instanceof Error, 'should be an error');
+      assert.equal(err.status, 200);
     };
 
     return rnl.sendMutation(req1);

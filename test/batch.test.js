@@ -54,6 +54,7 @@ describe('Batch tests', () => {
     const req1 = mockReq(1);
     req1.reject = (err) => {
       assert(err instanceof Error, 'should be an error');
+      assert.equal(err.status, 200);
     };
     const req2 = mockReq(2);
     assert.isFulfilled(rnl.sendQueries([req1, req2]));
