@@ -41,20 +41,24 @@ export default function gqErrorsMiddleware(opts = {}) {
     const query = `${req.relayReqType} ${req.relayReqId}`;
 
     return next(req).then(res => {
-      if (res.json) {
-        if (Array.isArray(res.json)) {
-          res.json.forEach(batchItem => {
-            if (batchItem.payload.errors) {
-              displayErrors(batchItem.payload.errors, { query, req, res });
+      return res.json()
+        .then(json => {
+          if (Array.isArray(json)) {
+            json.forEach(batchItem => {
+              if (batchItem.payload.errors) {
+                displayErrors(batchItem.payload.errors, { query, req, res });
+              }
+            });
+          } else {
+            if (json.errors) {
+              displayErrors(json.errors, { query, req, res });
             }
-          });
-        } else {
-          if (res.json.errors) {
-            displayErrors(res.json.errors, { query, req, res });
           }
-        }
-      }
-      return res;
+          return res;
+        })
+        .catch(() => {
+          return res;
+        });
     });
   };
 }

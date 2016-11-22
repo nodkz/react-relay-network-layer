@@ -2,6 +2,25 @@
 
 import createRequestError from './createRequestError';
 
+function createWrappedResponse(response) {
+  const res = response;
+
+  // Wrap json() so it can be consumed multiple times by each middleware
+  let jsonProm;
+  res.json = () => {
+    if (!jsonProm) {
+      jsonProm = new Promise((resolve, reject) => {
+        response.clone().json()
+          .then(json => resolve(json))
+          .catch(err => reject(err));
+      });
+    }
+    return jsonProm;
+  };
+
+  return res;
+}
+
 export default function fetchWrapper(request, middlewares) {
   const fetchAfterAllWrappers = (req) => {
     let { url, ...opts } = req;
@@ -15,26 +34,14 @@ export default function fetchWrapper(request, middlewares) {
     }
 
     return fetch(url, opts)
-      .then(response => throwOnServerError(request, response))
-      .then(res =>
-        // sub-promise for combining `res` with parsed json
-        res.json()
-        .then(json => {
-          res.json = json;
-          return res;
-        })
-        .catch(e => {
-          console.warn('error parsing response json', e); // eslint-disable-line no-console
-          res.json = {};
-          return res;
-        })
-      );
+      .then(res => createWrappedResponse(res));
   };
 
   const wrappedFetch = compose(...middlewares)(fetchAfterAllWrappers);
 
   return wrappedFetch(request)
-    .then(res => res.json);
+    .then(res => throwOnServerError(request, res))
+    .then(res => res.json());
 }
 
 
