@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign, no-use-before-define, prefer-template */
 
-import formatRequestErrors from '../formatRequestErrors';
+import createRequestError from '../createRequestError';
 
 export default function mutation(relayRequest, fetchWithMiddleware) {
   const req = {
@@ -19,12 +19,7 @@ export default function mutation(relayRequest, fetchWithMiddleware) {
   return fetchWithMiddleware(req)
     .then(payload => {
       if (payload.hasOwnProperty('errors')) {
-        const error = new Error(
-          'Server request for mutation `' + relayRequest.getDebugName() + '` ' +
-          'failed for the following reasons:\n\n' +
-          formatRequestErrors(relayRequest, payload.errors)
-        );
-        error.source = payload;
+        const error = createRequestError(relayRequest, 'mutation', '200', payload);
         relayRequest.reject(error);
       } else {
         relayRequest.resolve({ response: payload.data });

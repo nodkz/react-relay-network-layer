@@ -1,6 +1,27 @@
 /* eslint-disable no-use-before-define, no-else-return, prefer-const, no-param-reassign */
 
-export default function fetchWrapper(reqFromRelay, middlewares) {
+import createRequestError from './createRequestError';
+
+function createWrappedResponse(response) {
+  const res = response;
+
+  // Wrap json() so it can be consumed multiple times by each middleware
+  let jsonProm;
+  res.json = () => {
+    if (!jsonProm) {
+      jsonProm = new Promise((resolve, reject) => {
+        response.clone().json()
+          .then(json => resolve(json))
+          .catch(err => reject(err));
+      });
+    }
+    return jsonProm;
+  };
+
+  return res;
+}
+
+export default function fetchWrapper(request, middlewares) {
   const fetchAfterAllWrappers = (req) => {
     let { url, ...opts } = req;
 
@@ -13,26 +34,14 @@ export default function fetchWrapper(reqFromRelay, middlewares) {
     }
 
     return fetch(url, opts)
-      .then(res =>
-        // sub-promise for combining `res` with parsed json
-        res.json()
-        .then(json => {
-          res.json = json;
-          return res;
-        })
-        .catch(e => {
-          console.warn('error parsing response json', e); // eslint-disable-line no-console
-          res.json = {};
-          return res;
-        })
-      );
+      .then(res => createWrappedResponse(res));
   };
 
   const wrappedFetch = compose(...middlewares)(fetchAfterAllWrappers);
 
-  return wrappedFetch(reqFromRelay)
-    .then(throwOnServerError)
-    .then(res => res.json);
+  return wrappedFetch(request)
+    .then(res => throwOnServerError(request, res))
+    .then(res => res.json());
 }
 
 
@@ -56,10 +65,12 @@ function compose(...funcs) {
   }
 }
 
-function throwOnServerError(response) {
+function throwOnServerError(request, response) {
   if (response.status >= 200 && response.status < 300) {
     return response;
+  } else {
+    return response.text().then(payload => {
+      throw createRequestError(request.relayReqObj, request.relayReqType, response.status, payload);
+    });
   }
-
-  throw response;
 }
