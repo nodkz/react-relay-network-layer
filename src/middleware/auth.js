@@ -16,6 +16,7 @@ export default function authMiddleware(opts = {}) {
     tokenRefreshPromise,
     allowEmptyToken = false,
     prefix = 'Bearer ',
+    header = 'Authorization',
   } = opts;
 
   let tokenRefreshInProgress = null;
@@ -29,7 +30,7 @@ export default function authMiddleware(opts = {}) {
       resolve(token);
     }).then(token => {
       if (token) {
-        req.headers['Authorization'] = `${prefix}${token}`;
+        req.headers[header] = `${prefix}${token}`;
       }
       return next(req);
     }).then(res => {
@@ -44,7 +45,7 @@ export default function authMiddleware(opts = {}) {
           tokenRefreshInProgress = tokenRefreshPromise(req, err.res)
           .then(newToken => {
             tokenRefreshInProgress = null;
-            req.headers['Authorization'] = `${prefix}${newToken}`;
+            req.headers[header] = `${prefix}${newToken}`;
             return next(req); // re-run query with new token
           });
         }

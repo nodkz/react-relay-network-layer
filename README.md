@@ -27,6 +27,7 @@ Available middlewares:
   - `tokenRefreshPromise`: - function(req, err) which must return promise with new token, called only if server returns 401 status code and this function is provided.
   - `allowEmptyToken` - allow made a request without Authorization header if token is empty (default: `false`).
   - `prefix` - prefix before token (default: `'Bearer '`).
+  - `header` - name of the HTTP header to pass the token in (default: `'Authorization'`).
   - If you use `auth` middleware with `retry`, `retry` must be used before `auth`. Eg. if token expired when retries apply, then `retry` can call `auth` middleware again.
 - **logger** - for logging requests and responses. Options:
   - `logger` - log function (default: `console.log.bind(console, '[RELAY-NETWORK]')`)
@@ -159,6 +160,7 @@ Relay.injectNetworkLayer(new RelayNetworkLayer([
     // So `req` is a fetch options. And into this options, I added `url` prop, which will be extracted as shown above.
     // You have fully control under `fetch` via `req` object.
     
+    req.method = 'GET'; // change default POST request method to GET
     req.headers['X-Request-ID'] = uuid.v4(); // add `X-Request-ID` to request headers
     req.credentials = 'same-origin'; // provide CORS policy to XHR request in fetch method
     return next(req);
@@ -206,6 +208,10 @@ Middlewares use LIFO (last in, first out) stack. Or simply put - use `compose` f
  - call bubbling phase of `M1`
  - chain to `resPromise.then(res => res.json())` and pass this promise for resolving/rejecting Relay requests.
 
+
+Recommended modules
+==========
+- **[babel-plugin-transform-relay-hot](https://github.com/nodkz/babel-plugin-transform-relay-hot)** - Babel 6 plugin for transforming `Relay.QL` tagged templates via the GraphQL json schema file. Each time when schema file was changed, the wrapper updates instance of standard `babelRelayPlugin` with new schema without completely restarting dev server.
 
 TODO
 ====
