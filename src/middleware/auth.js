@@ -18,6 +18,8 @@ export default function authMiddleware(opts = {}) {
     prefix = 'Bearer ',
   } = opts;
 
+  let tokenRefreshInProgress = null;
+
   return next => req => {
     return new Promise((resolve, reject) => {
       const token = isFunction(tokenOrThunk) ? tokenOrThunk(req) : tokenOrThunk;
@@ -37,11 +39,17 @@ export default function authMiddleware(opts = {}) {
       return res;
     }).catch(err => {
       if (err.name === 'WrongTokenError') {
-        return tokenRefreshPromise(req, err.res)
+
+        if (!tokenRefreshInProgress) {
+          tokenRefreshInProgress = tokenRefreshPromise(req, err.res)
           .then(newToken => {
+            tokenRefreshInProgress = null;
             req.headers['Authorization'] = `${prefix}${newToken}`;
             return next(req); // re-run query with new token
           });
+        }
+
+        return tokenRefreshInProgress;
       }
 
       throw err;
