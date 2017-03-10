@@ -33,7 +33,7 @@ export default class RelayNetworkLayer {
 
   sendQueries(requests) {
     if (requests.length > 1 && !this._isBatchQueriesDisabled()) {
-      return queriesBatch(requests, this._fetchWithMiddleware);
+      return queriesBatch(requests, this._fetchWithMiddleware, this._options);
     }
 
     return queries(requests, this._fetchWithMiddleware);
