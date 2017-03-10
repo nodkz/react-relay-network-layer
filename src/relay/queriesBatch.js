@@ -1,7 +1,8 @@
 import { queryPost } from './_query';
 
-export default function queriesBatch(relayRequestList, fetchWithMiddleware) {
+function buildRelayRequest(relayRequestList) {
   const requestMap = {};
+
   relayRequestList.forEach((req) => {
     const reqId = req.getID();
     requestMap[reqId] = req;
@@ -26,9 +27,36 @@ export default function queriesBatch(relayRequestList, fetchWithMiddleware) {
     }))
   );
 
-  return fetchWithMiddleware(req)
+  return {
+    req,
+    requestMap,
+  };
+}
+
+function chunkBatchedRequests(relayRequestList, maxBatchSize) {
+  const masterRequestMap = {};
+  const chunks = [];
+
+  while (relayRequestList.length) {
+    chunks.push(relayRequestList.splice(0, maxBatchSize));
+  }
+
+  const requests = chunks.map(chunk => {
+    const { requestMap, req } = buildRelayRequest(chunk);
+    Object.assign(masterRequestMap, requestMap);
+    return req;
+  });
+
+  return {
+    requests,
+    requestMap: masterRequestMap,
+  };
+}
+
+function resolveBatchedQueries(fetchWithMiddleware, relayRequestList, requests, requestMap) {
+  return Promise.all(requests.map(req => fetchWithMiddleware(req)))
     .then(batchResponses => {
-      batchResponses.forEach((res) => {
+      [].concat(...batchResponses).forEach((res) => {
         if (!res) return;
         const relayRequest = requestMap[res.id];
 
@@ -46,9 +74,20 @@ export default function queriesBatch(relayRequestList, fetchWithMiddleware) {
           );
         }
       });
-    }).catch(e => {
+    })
+    .catch(e => {
       return Promise.all(relayRequestList.map(relayRequest => {
         return relayRequest.reject(e);
       }));
     });
+}
+
+export default function queriesBatch(relayRequestList, fetchWithMiddleware, options) {
+  const maxBatchSize = options && options.maxBatchSize;
+  if (!maxBatchSize) {
+    const { req, requestMap } = buildRelayRequest(relayRequestList);
+    return resolveBatchedQueries(fetchWithMiddleware, relayRequestList, [req], requestMap);
+  }
+  const { requests, requestMap } = chunkBatchedRequests(relayRequestList, options.maxBatchSize);
+  return resolveBatchedQueries(fetchWithMiddleware, relayRequestList, requests, requestMap);
 }
