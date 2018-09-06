@@ -38,7 +38,7 @@ describe('Middleware / auth', () => {
       expect(reqs[0][1].headers.Authorization).toBe('Bearer 123');
     });
 
-    it.only('should work with mutation', async () => {
+    it('should work with mutation', async () => {
       const req1 = mockReq();
       await rnl.sendMutation(req1);
       expect(req1.payload).toEqual({ response: 'PAYLOAD' });
