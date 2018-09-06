@@ -59,8 +59,7 @@ export type RRNLResponseObject = {
   statusText: string,
   headers: { [name: string]: string },
   url: string,
-  data?: any,
-  errors?: GraphQLResponseErrors,
+  payload?: GraphQLResponse,
 };
 
 export type RelayClassicRequest = {
@@ -74,5 +73,5 @@ export type RelayClassicRequest = {
 };
 
 export type RRNLOptions = {
-  noThrow: boolean,
+  noThrow?: boolean,
 };
